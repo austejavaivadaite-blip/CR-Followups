@@ -1,0 +1,3353 @@
+{
+  "name": "CR Followups",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        4544,
+        5904
+      ],
+      "id": "16dff9b9-b70a-4c25-92aa-20ffae0f2036",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b37f71e2-69ed-40ba-86d2-89bd72edae0a",
+              "leftValue": "={{ $json['2nd FU'] }}",
+              "rightValue": "={{ $today.format('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        6640
+      ],
+      "id": "5fe633dd-6f18-4fa3-b860-932d85a550de",
+      "name": "If 2nd fu"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "52af075c-b1db-4849-a26b-cdbef20f5917",
+              "leftValue": "={{ $json['Email ID'] }}",
+              "rightValue": "=V",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6080,
+        6736
+      ],
+      "id": "bae62ff2-268c-4a0c-b991-67b29886befc",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const templateRows = $input.all();\n\nconst targetRow = templateRows.find(function(item) {\n  var label = item.json.col_1;\n  return String(label).trim() === \"2nd\";\n});\n\nif (!targetRow) {\n  throw new Error('Row with label \"2nd\" not found');\n}\n\nconst templateColumnName = \"1st follow-up sent 3 weeks after the initial request if there is no response or the information is not removed (check the site if not removed). \";\nconst template = targetRow.json[templateColumnName];\n\nif (!template) {\n  throw new Error('Template is empty. Available fields: ' + Object.keys(targetRow.json).join(', '));\n}\n\nconst emails = $(\"Get many messages1\").all();\n\nreturn emails.map(function(email) {\n  var emailData = email.json;\n  var toEmail = \"\";\n  if (emailData.to && emailData.to.value && emailData.to.value.length > 0) {\n    toEmail = emailData.to.value[0].address;\n  }\n\n  // Extract Email ID directly from the subject line\n  var subjectMatch = emailData.subject ? emailData.subject.match(/\\[([A-Z0-9-]+)\\]/) : null;\n  var emailId = subjectMatch ? \"ID-\" + subjectMatch[1].replace(/^ID-/, \"\") : \"\";\n\n  return {\n    json: {\n      to: toEmail,\n      subject: emailData.subject,\n      threadId: emailData.threadId,\n      messageId: emailData.messageId,\n      template: template,\n      emailId: emailId\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6992,
+        6720
+      ],
+      "id": "8fc85a25-c09d-4351-b3d9-b2c7f91a1ac7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1067379633,
+          "mode": "list",
+          "cachedResultName": "Follow-ups",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=1067379633"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6800,
+        6720
+      ],
+      "id": "349eca8f-49f3-4329-9437-03ec1d8e88ba",
+      "name": "Templates1",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "simple": false,
+        "filters": {
+          "q": "=Subject: [{{ $json['Email ID'] }}]",
+          "sender": "dsr-removals@incogni.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        6608,
+        6720
+      ],
+      "id": "14087ea7-5c22-4d11-ab13-c48425d949ed",
+      "name": "Get many messages1",
+      "webhookId": "ae91c1dd-6514-409f-8f61-40d545e794b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HuE9BjMKMt1Uhmc2",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(function(item) {\n  var data = item.json;\n\n  var toEmail = data.to;\n  var subject = data.subject;\n  var messageId = data.messageId;\n  var threadId = data.threadId;\n  var emailId = data.emailId;\n\n  var email = [\n    \"To: \" + toEmail,\n    \"Subject: Re: \" + subject,\n    \"In-Reply-To: \" + messageId,\n    \"References: \" + messageId,\n    \"Content-Type: text/plain; charset=UTF-8\",\n    \"\",\n    data.template\n  ].join(\"\\n\");\n\n  var raw = Buffer.from(email).toString(\"base64\")\n    .replace(/\\+/g, \"-\")\n    .replace(/\\//g, \"_\")\n    .replace(/=+$/, \"\");\n\n  return {\n    json: {\n      raw: raw,\n      threadId: threadId,\n      emailId: emailId\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7216,
+        6720
+      ],
+      "id": "8dfe0d56-2ecc-458d-812b-12359eb41468",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "882afeef-aec4-4ac8-b600-241dc04a097a",
+              "leftValue": "={{ $json['3rd FU'] }}",
+              "rightValue": "={{ $today.format('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        7328
+      ],
+      "id": "967244db-5e23-4ab3-ab89-808b03109444",
+      "name": "if 3rd fu"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0e3a9fce-2a35-4a4f-83df-4c97fb96a8c0",
+              "leftValue": "={{ $json['Email ID'] }}",
+              "rightValue": "M",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6080,
+        7488
+      ],
+      "id": "753c2240-7b93-4b7b-a747-91da9cb0f5f6",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const templateRows = $input.all();\n\nconst targetRow = templateRows.find(function(item) {\n  var label = item.json.col_1;\n  return String(label).trim() === \"3rd\";\n});\n\nif (!targetRow) {\n  throw new Error('Row with label \"3rd\" not found');\n}\n\nconst templateColumnName = \"1st follow-up sent 3 weeks after the initial request if there is no response or the information is not removed (check the site if not removed). \";\nconst template = targetRow.json[templateColumnName];\n\nif (!template) {\n  throw new Error('Template is empty. Available fields: ' + Object.keys(targetRow.json).join(', '));\n}\n\nconst emails = $(\"Get many messages2\").all();\n\nreturn emails.map(function(email) {\n  var emailData = email.json;\n  var toEmail = \"\";\n  if (emailData.to && emailData.to.value && emailData.to.value.length > 0) {\n    toEmail = emailData.to.value[0].address;\n  }\n\n  // Extract Email ID directly from the subject line\n  var subjectMatch = emailData.subject ? emailData.subject.match(/\\[([A-Z0-9-]+)\\]/) : null;\n  var emailId = subjectMatch ? \"ID-\" + subjectMatch[1].replace(/^ID-/, \"\") : \"\";\n\n  return {\n    json: {\n      to: toEmail,\n      subject: emailData.subject,\n      threadId: emailData.threadId,\n      messageId: emailData.messageId,\n      template: template,\n      emailId: emailId\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6944,
+        7472
+      ],
+      "id": "65e887d7-5185-45ca-bd70-52ff28c34452",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1067379633,
+          "mode": "list",
+          "cachedResultName": "Follow-ups",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=1067379633"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6736,
+        7472
+      ],
+      "id": "000ee3b1-59e6-408b-a648-fd2b1c911b0d",
+      "name": "Templates2",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "simple": false,
+        "filters": {
+          "q": "=Subject: [{{ $json['Email ID'] }}]",
+          "sender": "dsr-removals@incogni.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        6528,
+        7472
+      ],
+      "id": "b6ee3718-9aa3-4791-9936-779b9de3dbce",
+      "name": "Get many messages2",
+      "webhookId": "ae91c1dd-6514-409f-8f61-40d545e794b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HuE9BjMKMt1Uhmc2",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(function(item) {\n  var data = item.json;\n\n  var toEmail = data.to;\n  var subject = data.subject;\n  var messageId = data.messageId;\n  var threadId = data.threadId;\n  var emailId = data.emailId;\n\n  var email = [\n    \"To: \" + toEmail,\n    \"Subject: Re: \" + subject,\n    \"In-Reply-To: \" + messageId,\n    \"References: \" + messageId,\n    \"Content-Type: text/plain; charset=UTF-8\",\n    \"\",\n    data.template\n  ].join(\"\\n\");\n\n  var raw = Buffer.from(email).toString(\"base64\")\n    .replace(/\\+/g, \"-\")\n    .replace(/\\//g, \"_\")\n    .replace(/=+$/, \"\");\n\n  return {\n    json: {\n      raw: raw,\n      threadId: threadId,\n      emailId: emailId\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7168,
+        7472
+      ],
+      "id": "1514f9f5-3ba8-4135-a427-70e055226f7b",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        6416,
+        6224
+      ],
+      "id": "1ae7e6a6-c513-4159-bb38-323463ca03d7",
+      "name": "Send a message",
+      "webhookId": "d191b6af-20f2-42f7-bf3c-babac7cc8335",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const failedItems = items;\n\n// Create a formatted message\nlet message = `🚨 *Follow-up Reminder*\\n\\n`;\nmessage += `${failedItems.length} form filling request(s) need 1st followup:\\n\\n`;\n\nfailedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6192,
+        6224
+      ],
+      "id": "d8863cb0-c632-4e03-ba7e-a4219a9ba679",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        6432,
+        6912
+      ],
+      "id": "971fcc0d-4006-4d2c-980c-2f6d5fd18cba",
+      "name": "Send a message1",
+      "webhookId": "d191b6af-20f2-42f7-bf3c-babac7cc8335",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const failedItems = items;\n\n// Create a formatted message\nlet message = `🚨 *Follow-up Reminder*\\n\\n`;\nmessage += `${failedItems.length} form filling request(s) need 2nd followup:\\n\\n`;\n\nfailedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6208,
+        6912
+      ],
+      "id": "400f3a9c-973b-45e5-859f-b09688a1fc4d",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        6480,
+        7680
+      ],
+      "id": "71e89249-f766-4c1d-9dac-38fe0bbf6d96",
+      "name": "Send a message2",
+      "webhookId": "d191b6af-20f2-42f7-bf3c-babac7cc8335",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const failedItems = items;\n\n// Create a formatted message\nlet message = `🚨 *Follow-up Reminder*\\n\\n`;\nmessage += `${failedItems.length} form filling request(s) need 3rd followup:\\n\\n`;\n\nfailedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6256,
+        7680
+      ],
+      "id": "3717f428-553c-47ef-bb6f-bebd069d745f",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eca55e14-0561-4a9f-81f0-1fed18fa6259",
+              "leftValue": "={{ $json.Close }}",
+              "rightValue": "={{ $today.format('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        8000
+      ],
+      "id": "79d29fd4-0e90-4197-a9a4-ea3161f65f2f",
+      "name": "If Close"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        6256,
+        8128
+      ],
+      "id": "69277b12-4f5f-40d3-8fc2-65c927b2cbc2",
+      "name": "Send a message3",
+      "webhookId": "d191b6af-20f2-42f7-bf3c-babac7cc8335",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const failedItems = items;\n\n// Create a formatted message\nlet message = `🚨 *Follow-up Reminder*\\n\\n`;\nmessage += `${failedItems.length} form filling request(s) needs to be closed:\\n\\n`;\n\nfailedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6000,
+        8128
+      ],
+      "id": "c2dfb90e-664e-44db-a927-4da52136709c",
+      "name": "Code in JavaScript9"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 975371209,
+          "mode": "list",
+          "cachedResultName": "Followups_today",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=975371209"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4784,
+        5888
+      ],
+      "id": "ae81fabc-d440-4f1d-bcfe-9dcc23636104",
+      "name": "Get row(s) in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "85058f22-d157-4395-93b4-e1fde03d90ec",
+              "leftValue": "={{ $json['1st FU'] }}",
+              "rightValue": "={{ $today.format('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5008,
+        5888
+      ],
+      "id": "2e136b4d-44a2-45ee-8b22-130c4562a8a7",
+      "name": "If 1st fu1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0e3a9fce-2a35-4a4f-83df-4c97fb96a8c0",
+              "leftValue": "={{ $json['Email ID'] }}",
+              "rightValue": "M",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        6032,
+        6016
+      ],
+      "id": "ce70d452-4014-4fd1-ada5-32400332a604",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const templateRows = $input.all();\n\nconst targetRow = templateRows.find(function(item) {\n  var label = item.json.col_1;\n  return String(label).trim() === \"1st\";\n});\n\nif (!targetRow) {\n  throw new Error('Row with label \"1st\" not found');\n}\n\nconst templateColumnName = \"1st follow-up sent 3 weeks after the initial request if there is no response or the information is not removed (check the site if not removed). \";\nconst template = targetRow.json[templateColumnName];\n\nif (!template) {\n  throw new Error('Template is empty. Available fields: ' + Object.keys(targetRow.json).join(', '));\n}\n\nconst emails = $(\"Get many messages3\").all();\n\nreturn emails.map(function(email) {\n  var emailData = email.json;\n  var toEmail = \"\";\n  if (emailData.to && emailData.to.value && emailData.to.value.length > 0) {\n    toEmail = emailData.to.value[0].address;\n  }\n\n  // Extract Email ID directly from the subject line\n  var subjectMatch = emailData.subject ? emailData.subject.match(/\\[([A-Z0-9-]+)\\]/) : null;\n  var emailId = subjectMatch ? \"ID-\" + subjectMatch[1].replace(/^ID-/, \"\") : \"\";\n\n  return {\n    json: {\n      to: toEmail,\n      subject: emailData.subject,\n      threadId: emailData.threadId,\n      messageId: emailData.messageId,\n      template: template,\n      emailId: emailId\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7024,
+        6000
+      ],
+      "id": "884aaf4f-3bef-41a3-bef5-dfd95fb75208",
+      "name": "Code in JavaScript10"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1067379633,
+          "mode": "list",
+          "cachedResultName": "Follow-ups",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=1067379633"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6832,
+        6000
+      ],
+      "id": "b4568254-45aa-4bdf-a23f-63157c1d006d",
+      "name": "Templates3",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": 1,
+        "simple": false,
+        "filters": {
+          "q": "=Subject: [{{ $json['Email ID'] }}]",
+          "sender": "dsr-removals@incogni.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        6624,
+        6000
+      ],
+      "id": "9f15c33e-ef27-4347-a040-280f721d0b50",
+      "name": "Get many messages3",
+      "webhookId": "ae91c1dd-6514-409f-8f61-40d545e794b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HuE9BjMKMt1Uhmc2",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(function(item) {\n  var data = item.json;\n\n  var toEmail = data.to;\n  var subject = data.subject;\n  var messageId = data.messageId;\n  var threadId = data.threadId;\n  var emailId = data.emailId;\n\n  var email = [\n    \"To: \" + toEmail,\n    \"Subject: Re: \" + subject,\n    \"In-Reply-To: \" + messageId,\n    \"References: \" + messageId,\n    \"Content-Type: text/plain; charset=UTF-8\",\n    \"\",\n    data.template\n  ].join(\"\\n\");\n\n  var raw = Buffer.from(email).toString(\"base64\")\n    .replace(/\\+/g, \"-\")\n    .replace(/\\//g, \"_\")\n    .replace(/=+$/, \"\");\n\n  return {\n    json: {\n      raw: raw,\n      threadId: threadId,\n      emailId: emailId\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7248,
+        6000
+      ],
+      "id": "63764852-4961-4b61-9507-7d6bf0a92a45",
+      "name": "Code in JavaScript11"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7712,
+        6000
+      ],
+      "id": "9ec16672-9f33-4910-a2bf-ff1bf6e359dc",
+      "name": "token"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "raw",
+              "value": "={{ $json.raw }}"
+            },
+            {
+              "name": "threadId",
+              "value": "={{ $json.threadId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7456,
+        6000
+      ],
+      "id": "1bc215a4-700a-4e41-bacd-80aae649671f",
+      "name": "Gmail",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HuE9BjMKMt1Uhmc2",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "raw",
+              "value": "={{ $json.raw }}"
+            },
+            {
+              "name": "threadId",
+              "value": "={{ $json.threadId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7376,
+        7472
+      ],
+      "id": "3cba948b-a1fd-4af8-95e8-40d9a23f84c5",
+      "name": "Gmail2",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "maxTries": 5,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HuE9BjMKMt1Uhmc2",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('Code in JavaScript11').all()[$itemIndex].json.emailId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7872,
+        6000
+      ],
+      "id": "9b8a7b4b-02fc-48dd-bd55-b4b6479c8282",
+      "name": "Admin find cr",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"followUpAt\": \"{{ new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8096,
+        5984
+      ],
+      "id": "7bd41675-a8f3-4ea8-b31d-001d122d7cce",
+      "name": "Admin update cr",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7680,
+        6720
+      ],
+      "id": "c665da8d-5160-4105-9262-fdc96d0f755f",
+      "name": "token1"
+    },
+    {
+      "parameters": {
+        "url": "=https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('Code in JavaScript3').all()[$itemIndex].json.emailId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token1').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7840,
+        6720
+      ],
+      "id": "99fbbb97-b4b6-4a6f-8729-bea8d9238a34",
+      "name": "Admin find cr1",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token1').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"followUpAt\": \"{{ new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8112,
+        6704
+      ],
+      "id": "0f9f67b3-c602-4d13-b78a-5f3f1fe18f54",
+      "name": "Admin update cr1",
+      "executeOnce": false,
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7616,
+        7472
+      ],
+      "id": "2ac3fb65-5655-47e5-b1eb-5d5f9098c99b",
+      "name": "token2"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token2').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"followUpAt\": \"{{ new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        8032,
+        7456
+      ],
+      "id": "42569c53-4933-4e27-a058-2d861be6be64",
+      "name": "Admin update cr2",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('Code in JavaScript5').all()[$itemIndex].json.emailId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token2').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7792,
+        7472
+      ],
+      "id": "f90c71ff-f0a4-4db8-a9e3-f84ccecd7821",
+      "name": "Admin find cr2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "raw",
+              "value": "={{ $json.raw }}"
+            },
+            {
+              "name": "threadId",
+              "value": "={{ $json.threadId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        7424,
+        6720
+      ],
+      "id": "ea790ccc-d4cd-42e1-bc35-8df7ac400c81",
+      "name": "Gmail1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "HuE9BjMKMt1Uhmc2",
+          "name": "Gmail account 2"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "batchSize": 15,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6336,
+        6720
+      ],
+      "id": "5926a1ed-c304-427a-aaaf-6d568bda9022",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "batchSize": 15,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6304,
+        7472
+      ],
+      "id": "63db54b3-6972-4bc9-8802-6aa4d4dfbbad",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "batchSize": 15,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        6368,
+        6000
+      ],
+      "id": "1c22517c-6a44-4984-98f1-3446662a1bcd",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kevin-zhang-8191--n8n-url-checker-check-urls.modal.run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.all().map(i => ({ url: i.json.URL, email_id: i.json['Email ID'] || i.json['Form ID'] }))) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5328,
+        5872
+      ],
+      "id": "b170d7da-866a-42f5-acfb-a96933127382",
+      "name": "Check URL 1st",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst allOrigItems = $(\"If 1st fu1\").all();\n\n// Build lookup from URL checker results (current batch only)\nconst statusMap = {};\nitems.forEach(item => {\n  statusMap[item.json.url] = item.json.statusCode;\n});\n\n// Only return items that were in this batch\nreturn allOrigItems\n  .filter(original => statusMap.hasOwnProperty(original.json.URL))\n  .map(original => {\n    const data = original.json;\n    const statusCode = statusMap[data.URL];\n    return {\n      json: {\n        ...data,\n        statusCode: statusCode,\n        removed: [404, 410].includes(statusCode)\n      }\n    };\n  });\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5520,
+        5872
+      ],
+      "id": "73ed329c-3d36-4061-8611-82619d301321",
+      "name": "Format URL 1st"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9c479665-c761-4ad1-826f-e33d2c38d4e0",
+              "leftValue": "={{ $json.removed }}",
+              "rightValue": "={{true}}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5744,
+        5872
+      ],
+      "id": "e2aa2b37-4ef5-4923-a5b6-46fc7bcd0808",
+      "name": "If Removed 1st?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Requests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $json.URL }}",
+            "Status": "Completed",
+            "1st FU": "=",
+            "2nd FU": "=",
+            "3rd FU": "=",
+            "Close": "="
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "1st FU",
+              "displayName": "1st FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "2nd FU",
+              "displayName": "2nd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "3rd FU",
+              "displayName": "3rd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Close",
+              "displayName": "Close",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6096,
+        5776
+      ],
+      "id": "04eaced5-815b-4512-b427-9123140c3fc5",
+      "name": "Update Completed 1st",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6336,
+        5776
+      ],
+      "id": "e4121b14-ee79-4cb2-8c3b-b4a8fffe59b8",
+      "name": "token 1st"
+    },
+    {
+      "parameters": {
+        "url": "https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('If Removed 1st?').item.json['Email ID'] || $('If Removed 1st?').item.json['Form ID'] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token 1st').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6560,
+        5776
+      ],
+      "id": "e9c2136e-7195-454d-baec-4dc4138dacee",
+      "name": "Admin find 1st",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token 1st').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"state\": \"completed\",\n  \"stateReasonUuid\": \"ec0daf2e-8cb1-485d-bde1-8bc128384b7a\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6784,
+        5776
+      ],
+      "id": "c05b0bdc-2fb1-444c-bc76-e6860ec3b073",
+      "name": "Admin close 1st",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const removedItems = $(\"If Removed 1st?\").all();\n\nlet message = `✅ *Removal Confirmed*\\n\\n`;\nmessage += `${removedItems.length} request(s) confirmed removed before 1st follow-up and closed:\\n\\n`;\n\nremovedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n`;\n  message += `   *Status code:* ${data.statusCode}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7008,
+        5776
+      ],
+      "id": "adac11ba-92fe-4d5a-a4db-cb3290b17268",
+      "name": "Code Removed 1st"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        7232,
+        5776
+      ],
+      "id": "6b768509-4e1d-481d-8d67-9e13b691998d",
+      "name": "Send removed 1st",
+      "webhookId": "630f12f3-b63b-48c4-89a4-71eb5928e8bc",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kevin-zhang-8191--n8n-url-checker-check-urls.modal.run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.all().map(i => ({ url: i.json.URL, email_id: i.json['Email ID'] || i.json['Form ID'] }))) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5344,
+        6640
+      ],
+      "id": "d0bc7cf2-b097-4106-a35f-3ba1d8cd9ed0",
+      "name": "Check URL 2nd",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst allOrigItems = $(\"If 2nd fu\").all();\n\n// Build lookup from URL checker results (current batch only)\nconst statusMap = {};\nitems.forEach(item => {\n  statusMap[item.json.url] = item.json.statusCode;\n});\n\n// Only return items that were in this batch\nreturn allOrigItems\n  .filter(original => statusMap.hasOwnProperty(original.json.URL))\n  .map(original => {\n    const data = original.json;\n    const statusCode = statusMap[data.URL];\n    return {\n      json: {\n        ...data,\n        statusCode: statusCode,\n        removed: [404, 410].includes(statusCode)\n      }\n    };\n  });\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5552,
+        6640
+      ],
+      "id": "9bf83588-6d70-4a3f-b87e-6a93442427b5",
+      "name": "Format URL 2nd"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e505d565-5360-4525-9b2a-6d30a4adb150",
+              "leftValue": "={{ $json.removed }}",
+              "rightValue": "={{true}}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5776,
+        6640
+      ],
+      "id": "de4654ff-681b-4f68-958e-85f91769c3a6",
+      "name": "If Removed 2nd?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Requests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $json.URL }}",
+            "Status": "Completed",
+            "1st FU": "=",
+            "2nd FU": "=",
+            "3rd FU": "=",
+            "Close": "="
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "1st FU",
+              "displayName": "1st FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "2nd FU",
+              "displayName": "2nd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "3rd FU",
+              "displayName": "3rd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Close",
+              "displayName": "Close",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6080,
+        6512
+      ],
+      "id": "785d44d6-ffa6-4add-a4d0-01f468614df7",
+      "name": "Update Completed 2nd",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6320,
+        6512
+      ],
+      "id": "3d79a24a-40f0-473a-a0a0-ebb0cea89e76",
+      "name": "token 2nd"
+    },
+    {
+      "parameters": {
+        "url": "https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('If Removed 2nd?').item.json['Email ID'] || $('If Removed 2nd?').item.json['Form ID'] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token 2nd').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6544,
+        6512
+      ],
+      "id": "9f374b50-9834-470f-a136-78d6cc94061e",
+      "name": "Admin find 2nd",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token 2nd').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"state\": \"completed\",\n  \"stateReasonUuid\": \"ec0daf2e-8cb1-485d-bde1-8bc128384b7a\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6768,
+        6512
+      ],
+      "id": "0ed0c495-59db-44a5-acd5-950cff034653",
+      "name": "Admin close 2nd",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const removedItems = $(\"If Removed 2nd?\").all();\n\nlet message = `✅ *Removal Confirmed*\\n\\n`;\nmessage += `${removedItems.length} request(s) confirmed removed before 2nd follow-up and closed:\\n\\n`;\n\nremovedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n`;\n  message += `   *Status code:* ${data.statusCode}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6976,
+        6512
+      ],
+      "id": "2a965dcc-6791-41df-b9c9-87c6e3f25b8f",
+      "name": "Code Removed 2nd"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        7184,
+        6512
+      ],
+      "id": "d2db9531-2a92-44f7-ab57-f59e36c26dcc",
+      "name": "Send removed 2nd",
+      "webhookId": "5bb9604a-abb4-4dc5-a46e-ab7633e3eedc",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kevin-zhang-8191--n8n-url-checker-check-urls.modal.run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.all().map(i => ({ url: i.json.URL, email_id: i.json['Email ID'] || i.json['Form ID'] }))) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5328,
+        7328
+      ],
+      "id": "ead122e5-b90a-4ec4-98db-4737bbe645e2",
+      "name": "Check URL 3rd",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst allOrigItems = $(\"If 3rd fu1\").all();\n\n// Build lookup from URL checker results (current batch only)\nconst statusMap = {};\nitems.forEach(item => {\n  statusMap[item.json.url] = item.json.statusCode;\n});\n\n// Only return items that were in this batch\nreturn allOrigItems\n  .filter(original => statusMap.hasOwnProperty(original.json.URL))\n  .map(original => {\n    const data = original.json;\n    const statusCode = statusMap[data.URL];\n    return {\n      json: {\n        ...data,\n        statusCode: statusCode,\n        removed: [404, 410].includes(statusCode)\n      }\n    };\n  });\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5536,
+        7328
+      ],
+      "id": "01394ac2-7ae6-48f0-ba34-3e3230ee0bc5",
+      "name": "Format URL 3rd"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9ce647e3-3e36-4de2-af23-6b18c0e69527",
+              "leftValue": "={{ $json.removed }}",
+              "rightValue": "={{true}}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5760,
+        7328
+      ],
+      "id": "4ac185d6-5250-4e19-bfca-1acf6c574c86",
+      "name": "If Removed 3rd?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Requests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $json.URL }}",
+            "Status": "Completed",
+            "1st FU": "=",
+            "2nd FU": "=",
+            "3rd FU": "=",
+            "Close": "="
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "1st FU",
+              "displayName": "1st FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "2nd FU",
+              "displayName": "2nd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "3rd FU",
+              "displayName": "3rd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Close",
+              "displayName": "Close",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6080,
+        7216
+      ],
+      "id": "73ca0316-eeb0-4d38-ba95-ad30b0ac9c68",
+      "name": "Update Completed 3rd",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6320,
+        7216
+      ],
+      "id": "07d6a73d-14c0-40b5-b2d1-3fbb1b0bf1a8",
+      "name": "token 3rd"
+    },
+    {
+      "parameters": {
+        "url": "https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('If Removed 3rd?').item.json['Email ID'] || $('If Removed 3rd?').item.json['Form ID'] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token 3rd').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6544,
+        7216
+      ],
+      "id": "1c027978-712d-4892-b564-a82fc5b5b33f",
+      "name": "Admin find 3rd",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token 3rd').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"state\": \"completed\",\n  \"stateReasonUuid\": \"ec0daf2e-8cb1-485d-bde1-8bc128384b7a\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6768,
+        7216
+      ],
+      "id": "7bb983d0-ea50-4a2f-af4b-ab2877d1372e",
+      "name": "Admin close 3rd",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const removedItems = $(\"If Removed 3rd?\").all();\n\nlet message = `✅ *Removal Confirmed*\\n\\n`;\nmessage += `${removedItems.length} request(s) confirmed removed before 3rd follow-up and closed:\\n\\n`;\n\nremovedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n`;\n  message += `   *Status code:* ${data.statusCode}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6992,
+        7200
+      ],
+      "id": "6d25fec1-8fa9-4852-a375-6f890ca3e652",
+      "name": "Code Removed 3rd"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        7216,
+        7200
+      ],
+      "id": "6d4dfc13-0b25-46d2-920c-46ee5bdf0660",
+      "name": "Send removed 3rd",
+      "webhookId": "6f7d9b46-2373-42c8-9f9c-23cd769de383",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kevin-zhang-8191--n8n-url-checker-check-urls.modal.run",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($input.all().map(i => ({ url: i.json.URL, email_id: i.json['Email ID'] || i.json['Form ID'] }))) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5296,
+        8000
+      ],
+      "id": "28e6d10a-c277-4633-aab7-20df39016f42",
+      "name": "Check URL close",
+      "executeOnce": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst allOrigItems = $(\"If Close\").all();\n\n// Build lookup from URL checker results (current batch only)\nconst statusMap = {};\nitems.forEach(item => {\n  statusMap[item.json.url] = item.json.statusCode;\n});\n\n// Only return items that were in this batch\nreturn allOrigItems\n  .filter(original => statusMap.hasOwnProperty(original.json.URL))\n  .map(original => {\n    const data = original.json;\n    const statusCode = statusMap[data.URL];\n    return {\n      json: {\n        ...data,\n        statusCode: statusCode,\n        removed: [404, 410].includes(statusCode)\n      }\n    };\n  });\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5504,
+        8000
+      ],
+      "id": "3e388f2c-0404-4691-bafa-4e73f1d2b9d0",
+      "name": "Format URL close"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "29515313-8056-4d45-b4ef-31a74e38e5f8",
+              "leftValue": "={{ $json.removed }}",
+              "rightValue": "={{true}}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5712,
+        8000
+      ],
+      "id": "896ec349-39f5-4db3-96bd-82bf268dcd6d",
+      "name": "If Removed close?"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo",
+          "mode": "list",
+          "cachedResultName": "Custom Removals tracking",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Requests",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1OhEohlpMe8BU5fz3h9zjmN-mWL0mSKdT9lt8tGdSJLo/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "URL": "={{ $json.URL }}",
+            "Status": "Completed",
+            "1st FU": "=",
+            "2nd FU": "=",
+            "3rd FU": "=",
+            "Close": "="
+          },
+          "matchingColumns": [
+            "URL"
+          ],
+          "schema": [
+            {
+              "id": "URL",
+              "displayName": "URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "1st FU",
+              "displayName": "1st FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "2nd FU",
+              "displayName": "2nd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "3rd FU",
+              "displayName": "3rd FU",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Close",
+              "displayName": "Close",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        6032,
+        7888
+      ],
+      "id": "d953319f-4e9e-46b9-922a-3d9d3650e5fa",
+      "name": "Update Completed close",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "g8s7z9dzV8TpP98i",
+          "name": "Google Sheets account 7"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://auth.incogni.com/realms/incogni/protocol/openid-connect/token",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "grant_type",
+              "value": "client_credentials"
+            },
+            {
+              "name": "client_id",
+              "value": "automation-agent-client"
+            },
+            {
+              "name": "client_secret",
+              "value": "gQs563m9C58fU5Sg5KZTYLk4SraTkSfA"
+            },
+            {
+              "name": "scope",
+              "value": "openid"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6272,
+        7888
+      ],
+      "id": "b5f8f6d3-a93c-41dc-94a3-566b93603206",
+      "name": "token close"
+    },
+    {
+      "parameters": {
+        "url": "https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "externalId",
+              "value": "={{ $('If Removed close?').item.json['Email ID'] || $('If Removed close?').item.json['Form ID'] }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token close').item.json.access_token}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6480,
+        7888
+      ],
+      "id": "9f5922c3-22a2-490e-906e-28f94cb4b984",
+      "name": "Admin find close",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ \"https://custom-removals-api.prdbe.conigni.com/api/admin/v1/custom-removals/\" + $json.data[0].uuid }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('token close').first().json.access_token }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"state\": \"completed\",\n  \"stateReasonUuid\": \"ec0daf2e-8cb1-485d-bde1-8bc128384b7a\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6720,
+        7888
+      ],
+      "id": "f1652563-1fe2-4e4e-ae5e-085755c02c6c",
+      "name": "Admin close close",
+      "executeOnce": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const removedItems = $(\"If Removed close?\").all();\n\nlet message = `✅ *Removal Confirmed*\\n\\n`;\nmessage += `${removedItems.length} request(s) confirmed removed before close follow-up and closed:\\n\\n`;\n\nremovedItems.forEach((item, index) => {\n  const data = item.json;\n  message += `${index + 1}. *Form:* ${data['Email/Form for submission']}\\n`;\n  message += `   *Custom removal link:* ${data.URL}\\n`;\n  message += `   *Owner:* ${data.Owner}\\n`;\n  message += `   *Status code:* ${data.statusCode}\\n\\n`;\n});\n\nreturn [{\n  json: {\n    message: message\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6944,
+        7888
+      ],
+      "id": "2ec5486c-9185-48ae-9974-333343207b84",
+      "name": "Code Removed close"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGJC4N798",
+          "mode": "id"
+        },
+        "text": "={{ $json.message }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        7168,
+        7888
+      ],
+      "id": "21ec40a0-b395-4b72-9df4-e1225983635d",
+      "name": "Send removed close",
+      "webhookId": "dddb5d45-bff4-4365-a5ce-4105519b4b20",
+      "credentials": {
+        "slackApi": {
+          "id": "IdhWdjz2CnVrgmBE",
+          "name": "Slack account 20"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If 2nd fu": {
+      "main": [
+        [
+          {
+            "node": "Check URL 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "if 3rd fu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Templates1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages1": {
+      "main": [
+        [
+          {
+            "node": "Templates1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "if 3rd fu": {
+      "main": [
+        [
+          {
+            "node": "Check URL 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Templates2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages2": {
+      "main": [
+        [
+          {
+            "node": "Templates2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Gmail2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Close": {
+      "main": [
+        [
+          {
+            "node": "Check URL close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript9": {
+      "main": [
+        [
+          {
+            "node": "Send a message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "If 1st fu1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If 1st fu1": {
+      "main": [
+        [
+          {
+            "node": "Check URL 1st",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If 2nd fu",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript10": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Templates3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many messages3": {
+      "main": [
+        [
+          {
+            "node": "Templates3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript11": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token": {
+      "main": [
+        [
+          {
+            "node": "Admin find cr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail2": {
+      "main": [
+        [
+          {
+            "node": "token2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find cr": {
+      "main": [
+        [
+          {
+            "node": "Admin update cr",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin update cr": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token1": {
+      "main": [
+        [
+          {
+            "node": "Admin find cr1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find cr1": {
+      "main": [
+        [
+          {
+            "node": "Admin update cr1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin update cr1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token2": {
+      "main": [
+        [
+          {
+            "node": "Admin find cr2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin update cr2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find cr2": {
+      "main": [
+        [
+          {
+            "node": "Admin update cr2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail1": {
+      "main": [
+        [
+          {
+            "node": "token1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get many messages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get many messages2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Get many messages3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check URL 1st": {
+      "main": [
+        [
+          {
+            "node": "Format URL 1st",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format URL 1st": {
+      "main": [
+        [
+          {
+            "node": "If Removed 1st?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Removed 1st?": {
+      "main": [
+        [
+          {
+            "node": "Update Completed 1st",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Completed 1st": {
+      "main": [
+        [
+          {
+            "node": "token 1st",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token 1st": {
+      "main": [
+        [
+          {
+            "node": "Admin find 1st",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find 1st": {
+      "main": [
+        [
+          {
+            "node": "Admin close 1st",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin close 1st": {
+      "main": [
+        [
+          {
+            "node": "Code Removed 1st",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Removed 1st": {
+      "main": [
+        [
+          {
+            "node": "Send removed 1st",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check URL 2nd": {
+      "main": [
+        [
+          {
+            "node": "Format URL 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format URL 2nd": {
+      "main": [
+        [
+          {
+            "node": "If Removed 2nd?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Removed 2nd?": {
+      "main": [
+        [
+          {
+            "node": "Update Completed 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Completed 2nd": {
+      "main": [
+        [
+          {
+            "node": "token 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token 2nd": {
+      "main": [
+        [
+          {
+            "node": "Admin find 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find 2nd": {
+      "main": [
+        [
+          {
+            "node": "Admin close 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin close 2nd": {
+      "main": [
+        [
+          {
+            "node": "Code Removed 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Removed 2nd": {
+      "main": [
+        [
+          {
+            "node": "Send removed 2nd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check URL 3rd": {
+      "main": [
+        [
+          {
+            "node": "Format URL 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format URL 3rd": {
+      "main": [
+        [
+          {
+            "node": "If Removed 3rd?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Removed 3rd?": {
+      "main": [
+        [
+          {
+            "node": "Update Completed 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Completed 3rd": {
+      "main": [
+        [
+          {
+            "node": "token 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token 3rd": {
+      "main": [
+        [
+          {
+            "node": "Admin find 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find 3rd": {
+      "main": [
+        [
+          {
+            "node": "Admin close 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin close 3rd": {
+      "main": [
+        [
+          {
+            "node": "Code Removed 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Removed 3rd": {
+      "main": [
+        [
+          {
+            "node": "Send removed 3rd",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check URL close": {
+      "main": [
+        [
+          {
+            "node": "Format URL close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format URL close": {
+      "main": [
+        [
+          {
+            "node": "If Removed close?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Removed close?": {
+      "main": [
+        [
+          {
+            "node": "Update Completed close",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Completed close": {
+      "main": [
+        [
+          {
+            "node": "token close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "token close": {
+      "main": [
+        [
+          {
+            "node": "Admin find close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin find close": {
+      "main": [
+        [
+          {
+            "node": "Admin close close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Admin close close": {
+      "main": [
+        [
+          {
+            "node": "Code Removed close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Removed close": {
+      "main": [
+        [
+          {
+            "node": "Send removed close",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "dde8f4ac-79f7-4cf7-be55-fde2f1111af2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d165545424d6c4d6cfe34c0d11e9fd86ce137e6cf08622369077d2a993baa2c4"
+  },
+  "id": "FPwoS4uTXBEunmXd",
+  "tags": []
+}
